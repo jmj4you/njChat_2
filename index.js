@@ -18,37 +18,47 @@ app.get('/', function (req, res) {
 });
 
 // User numbers
-var userCount = 0;
+var userList = [];
 io.on('connection', function (socket) {
 
     // user status
     var hasUser = false;
 
+    /** current users Listing */
+    socket.on('current_users', function (data) {
+        console.log(data);
+        io.emit('current_users', {userList: userList});
+    });
+
+    
     socket.on('add_user', function (username) {
         if (hasUser) return;
 
         // Assign username
         socket.username = username;
-        ++userCount;
+        if (userList.indexOf(username) == -1) {
+            userList.push(username);
+        }
         hasUser = true;
         //io.emit('login_callback', " Welcome " + username + ", start chat with friends..."); // use this at client side
         // echo globally (all clients) that a person has connected
         io.emit('user_joined', {
             username: socket.username,
-            userCount: userCount
+            userList: userList,
         });
 
     });
     console.log('a user connected');
     socket.on('disconnect', function () {
-        console.log('user disconnected');
+        userList.pop(socket.username);
+        console.log(socket.username + ' user disconnected');
     });
 
 
     socket.on('chat_message', function (msg) {
         //console.log('message: ' + msg);
         io.emit('chat_callback', {
-            user: socket.username,
+            username: socket.username,
             message: msg
         });
     });
