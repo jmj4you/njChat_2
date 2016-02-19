@@ -3,32 +3,25 @@
  ********************************** */
 
 var socket = io();
-
+var me;
 $(function () {
 
     var $userForm = $('#user_form');
     var $chatForm = $('#chat_form');
 
-    /** current users Listing */
-    socket.emit('current_users', 1);
-    socket.on('current_users', function (data) {
-        console.log(data);
-        $('#online-users').html(data.userList.length);
-        addNewUser(data);
-    });
-
 
     /** ADD USER */
     $userForm.submit(function () {
-        socket.emit('add_user', $(this).find(':text').val());
+        $('#add-user-section').remove();
+        me = $(this).find(':text').val();
+        socket.emit('add_user', me);
         return false;
     });
-    socket.on('user_joined', function (data) {
+    /** current users Listing */
+    socket.on('current_users', function (data) {
         $('#online-users').html(data.userList.length);
-        $('#add-user-section').remove();
         addNewUser(data);
     });
-
 
     /** CHAT MESSAGE*/
     $chatForm.submit(function () {
@@ -45,13 +38,19 @@ $(function () {
 });
 
 function addNewUser(data) {
+    $('#user-list').html('');
+    console.log(data);
+    console.log(me);
     $.each(data.userList, function (index, username) {
+
+        //var img_src = (me == data.me) ? 'assets/img/me.jpeg' : 'assets/img/user.png';
+        var img_src = 'assets/img/user.png';
 
         var tmpl = '  <li class="media">'
             + '<div class="media-body">'
             + '<div class="media">'
             + '<a class="pull-left" href="#">'
-            + '<img class="media-object img-circle" style="max-height:40px;"    src="assets/img/user.png"/>'
+            + '<img class="media-object img-circle" style="max-height:40px;"    src="' + img_src + '"/>'
             + '</a>'
             + '<div class="media-body">'
             + '<h5>' + username + '</h5>'
@@ -60,7 +59,7 @@ function addNewUser(data) {
             + '</div>'
             + '</div>'
             + '</li>';
-        $('#user-list').append(tmpl);
+        $('#user-list').append(tmpl).last().hide().fadeIn('slow');
     });
 }
 
@@ -76,5 +75,5 @@ function addNewMessage(data) {// json
         + '</div>'
         + '</div>'
         + '</li> ';
-    $('#message-list').append(tmpl);
+    $('#message-list').hide().append(tmpl).fadeIn('slow');
 }

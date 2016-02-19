@@ -1,4 +1,3 @@
-//var app = require('express')();
 var express = require('express');
 var app = express();
 
@@ -23,11 +22,12 @@ io.on('connection', function (socket) {
 
     // user status
     var hasUser = false;
+    sendCurrentUsers();
 
     /** current users Listing */
     socket.on('current_users', function (data) {
         console.log(data);
-        io.emit('current_users', {userList: userList});
+        sendCurrentUsers();
     });
 
     
@@ -40,18 +40,21 @@ io.on('connection', function (socket) {
             userList.push(username);
         }
         hasUser = true;
+        sendCurrentUsers();
         //io.emit('login_callback', " Welcome " + username + ", start chat with friends..."); // use this at client side
         // echo globally (all clients) that a person has connected
-        io.emit('user_joined', {
-            username: socket.username,
-            userList: userList,
-        });
+        //io.emit('user_joined', {
+        //    username: socket.username,
+        //    userList: userList,
+        //});
 
     });
     console.log('a user connected');
     socket.on('disconnect', function () {
         userList.pop(socket.username);
         console.log(socket.username + ' user disconnected');
+        sendCurrentUsers();
+
     });
 
 
@@ -62,9 +65,19 @@ io.on('connection', function (socket) {
             message: msg
         });
     });
-});
+
+    /*****************************
+     *      Common functions for SOCKET    *
+     *****************************/
+
+    function sendCurrentUsers() {
+        io.emit('current_users', {userList: userList, me: socket.username});
+    }
+
+});// END of io.on
 
 
 http.listen(port, function () {
     console.log('listening on *:' + port);
 });
+
